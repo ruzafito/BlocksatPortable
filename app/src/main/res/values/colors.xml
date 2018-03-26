@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="colorAlert">#EF5350</color>
+    <color name="white">#FFFFFF</color>
+    <color name="colorText">#004C55</color>
+    <color name="colorRemoteControl">#D500F9</color>
+    <color name="colorLabyrinthSolver">#1E88E5</color>
+    <color name="colorAccelChall">#FF9100</color>
+    <color name="colorCommsLogs">#00BFA5</color>
+    <color name="colorBack">#88CCD5</color>
+    <color name="colorLight">#00BCD4</color>
+    <color name="colorButton">#00A5BA</color>
+    <color name="colorMedium">#00757A</color>
+    <color name="colorDetail">#DD7000</color>
+    <color name="colorGrey">#E0E0E0</color>
+    <color name="colorDarkGrey">#6E6E6E</color>
+</resources>

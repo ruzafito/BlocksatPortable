@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">BlocksatPortable</string>
+    <string name="app_label">Blocksat Portable</string>
+    <string name="solicitar">Solicitar Inicio</string>
+    <string name="gsm_signal">gsm_signal</string>
+    <string name="gps_signal">gps_signal</string>
+    <string name="ble_signal">ble_signal</string>
+    <string name="battery_level">battery_level</string>
+    <string name="button_menu">button_menu</string>
+    <string name="menu_info">Info</string>
+    <string name="menu_config_app">Configuración App</string>
+    <string name="menu_config_devi">Configuración Dispositivo</string>
+    <string name="version">1.0.0</string>
+    <string name="contact">sergiodelhorno@gmail.com</string>
+
+
+    <string name="ble_not_supported">BLE is not supported</string>
+    <string name="label_data">Data:</string>
+    <string name="label_device_address">Device address:</string>
+    <string name="label_state">State:</string>
+    <string name="no_data">No data</string>
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="title_devices">BLE Device Scan</string>
+    <string name="error_bluetooth_not_supported">Bluetooth not supported.</string>
+
+    <string name="unknown_device">Unknown device</string>
+    <string name="unknown_characteristic">Unknown characteristic</string>
+    <string name="unknown_service">Unknown service</string>
+
+    <!-- Menu items -->
+    <string name="menu_connect">Connect</string>
+    <string name="menu_disconnect">Disconnect</string>
+    <string name="menu_scan">Scan</string>
+    <string name="menu_stop">Stop</string>
+
+</resources>

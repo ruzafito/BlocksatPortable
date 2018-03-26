@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="sener.blocksatportable">
+
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+    <uses-permission android:name="android.permission.BLUETOOTH"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.READ_OWNER_DATA" />
+    <uses-permission android:name="android.permission.WRITE_OWNER_DATA" />
+
+    <!-- Declare this required feature if you want to make the app available to BL E-capable
+        devices only.  If you want to make your app available to devices that don't support BLE,
+        you should omit this in the manifest.  Instead, determine BLE capability by using
+        PackageManager.hasSystemFeature(FEATURE_BLUETOOTH_LE) -->
+    <uses-feature android:name="android.hardware.bluetooth_le" android:required="true"/>
+
+    <application
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+
+        <activity android:name=".Activities.LoginActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <activity android:name=".Activities.MainActivity"></activity>
+
+        <activity android:name=".Activities.InfoActivity"></activity>
+
+        <activity android:name=".Activities.ConfigAppActivity"></activity>
+
+        <activity android:name=".Activities.ConfigDevActivity"></activity>
+
+        <activity android:name=".Communications.DeviceScanActivity"></activity>
+
+        <service android:name=".Communications.BluetoothLeService" android:enabled="true"></service>
+    </application>
+
+</manifest>
