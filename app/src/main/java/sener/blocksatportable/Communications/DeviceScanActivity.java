@@ -7,19 +7,15 @@ import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
-import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -29,16 +25,12 @@ import android.os.IBinder;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ExpandableListView;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import sener.blocksatportable.Activities.MainActivity;
@@ -49,7 +41,7 @@ import sener.blocksatportable.R;
 /**
  * <h1>Activity: DeviceScanActivity</h1>
  * <p>
- * Activity for scanning and displaying available Bluetooth LE devices.
+ * Activity for scan and display available Bluetooth LE devices.
  * </p>
  *
  * @author  Sergio del Horno
@@ -69,24 +61,9 @@ public class DeviceScanActivity extends Activity {
 
     ListView lv_list_devices;
 
-    private final static String TAG = DeviceScanActivity.class.getSimpleName();
-
-    public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
-    public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
-
-    private TextView mConnectionState;
-    private TextView mDataField;
     private String mDeviceName;
     private String mDeviceAddress;
-    private ExpandableListView mGattServicesList;
     private BluetoothLeService mBluetoothLeService;
-    private ArrayList<ArrayList<BluetoothGattCharacteristic>> mGattCharacteristics =
-            new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
-    private boolean mConnected = false;
-    private BluetoothGattCharacteristic mNotifyCharacteristic;
-
-    private final String LIST_NAME = "NAME";
-    private final String LIST_UUID = "UUID";
 
     private static final int MY_PERMISSIONS_REQUEST_ACCESS_COARSE = 20;
     private static final int REQUEST_ENABLE_BT = 1;
@@ -103,6 +80,8 @@ public class DeviceScanActivity extends Activity {
         setContentView(R.layout.activity_list_devices);
         mHandler = new Handler();
 
+        // Check if the App have the request permission to use BLE connectivity. If not, request
+        // the permissions
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)!= PackageManager.PERMISSION_GRANTED){
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.ACCESS_COARSE_LOCATION)) {
             } else {
@@ -122,22 +101,17 @@ public class DeviceScanActivity extends Activity {
                         BluetoothDevice btDevice = result.getDevice();
                         mLeDeviceListAdapter.addDevice(btDevice);
                         mLeDeviceListAdapter.notifyDataSetChanged();
-                        //connectToDevice(btDevice);
                     }
-
                     @Override
                     public void onBatchScanResults(List<ScanResult> results) {
                         for (ScanResult sr : results) {
                             Log.i("ScanResult - Results", sr.toString());
                         }
                     }
-
                     @Override
                     public void onScanFailed(int errorCode) {
                         Log.e("Scan Failed", "Error Code: " + errorCode);
                     }
-
-
                 };
             }
         }
@@ -176,24 +150,10 @@ public class DeviceScanActivity extends Activity {
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.menu_scan:
-                mLeDeviceListAdapter.clear();
-                scanLeDevice(true);
-                break;
-            case R.id.menu_stop:
-                scanLeDevice(false);
-                break;
-        }
-        return true;
-    }
-
-    @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
 
+        // If there is a BLE Service connected, disconnect it to try a new connection
         if (mBluetoothLeService != null)
             mBluetoothLeService.disconnect();
         bleConnected = false;
@@ -204,9 +164,6 @@ public class DeviceScanActivity extends Activity {
         lv_list_devices = (ListView) findViewById(R.id.lv_list_devi);
         lv_list_devices.setAdapter(mLeDeviceListAdapter);
 
-        //scanLeDevice(true);
-
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
             settings = new ScanSettings.Builder()
@@ -215,7 +172,6 @@ public class DeviceScanActivity extends Activity {
             filters = new ArrayList<ScanFilter>();
         }
         scanLeDevice(true);
-
 
         lv_list_devices.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -227,14 +183,12 @@ public class DeviceScanActivity extends Activity {
                 mDeviceName = device.getName();
 
                 if (mScanning) {
-                    //mBluetoothAdapter.stopLeScan(mLeScanCallback);
                     mBluetoothLeScanner.stopScan(mScanCallback);
                     mScanning = false;
                 }
                 connectBLESelected();
             }
         });
-
 
     }
 
@@ -243,15 +197,17 @@ public class DeviceScanActivity extends Activity {
         super.onPause();
         if (mBluetoothAdapter != null && mBluetoothAdapter.isEnabled()) {
             scanLeDevice(false);
+            return;
         }
-        //scanLeDevice(false);
-        //unregisterReceiver(mGattUpdateReceiver);
-        //mLeDeviceListAdapter.clear();
+        scanLeDevice(false);
+        mLeDeviceListAdapter.clear();
     }
 
     @Override
     protected void onDestroy() {
+        unbindService(mServiceConnection);
         if (mGatt == null) {
+            super.onDestroy();
             return;
         }
         mGatt.close();
@@ -269,6 +225,12 @@ public class DeviceScanActivity extends Activity {
         super.onActivityResult(requestCode, resultCode, data);
     }
 
+    /**
+     * Start or stope scanning BLE devices depending on a given parameter.
+     * Depending of the OS version the scan process may variate, so this function checks the version
+     * and uses one method or another to start or stop the scan.
+     * @param enable Indicates if the scan will start or stop.
+     */
     private void scanLeDevice(final boolean enable) {
         if (enable) {
             mHandler.postDelayed(new Runnable() {
@@ -298,7 +260,6 @@ public class DeviceScanActivity extends Activity {
         }
     }
 
-
     private BluetoothAdapter.LeScanCallback mLeScanCallback =
             new BluetoothAdapter.LeScanCallback() {
                 @Override
@@ -310,55 +271,14 @@ public class DeviceScanActivity extends Activity {
                             Log.i("onLeScan", device.toString());
                             mLeDeviceListAdapter.addDevice(device);
                             mLeDeviceListAdapter.notifyDataSetChanged();
-                            //connectToDevice(device);
                         }
                     });
                 }
             };
 
-//    public void connectToDevice(BluetoothDevice device) {
-//        if (mGatt == null) {
-//            mGatt = device.connectGatt(this, false, gattCallback);
-//            scanLeDevice(false);// will stop after first device detection
-//        }
-//    }
-//
-//    private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
-//        @Override
-//        public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-//            Log.i("onConnectionStateChange", "Status: " + status);
-//            switch (newState) {
-//                case BluetoothProfile.STATE_CONNECTED:
-//                    Log.i("gattCallback", "STATE_CONNECTED");
-//                    gatt.discoverServices();
-//                    break;
-//                case BluetoothProfile.STATE_DISCONNECTED:
-//                    Log.e("gattCallback", "STATE_DISCONNECTED");
-//                    break;
-//                default:
-//                    Log.e("gattCallback", "STATE_OTHER");
-//            }
-//
-//        }
-//
-//        @Override
-//        public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-//            List<BluetoothGattService> services = gatt.getServices();
-//            Log.i("onServicesDiscovered", services.toString());
-//            gatt.readCharacteristic(services.get(1).getCharacteristics().get
-//                    (0));
-//        }
-//
-//        @Override
-//        public void onCharacteristicRead(BluetoothGatt gatt,
-//                                         BluetoothGattCharacteristic
-//                                                 characteristic, int status) {
-//            Log.i("onCharacteristicRead", characteristic.toString());
-//            gatt.disconnect();
-//        }
-//    };
-
-
+    /**
+     * Starts the connection to a selected BLE device
+     */
     private void connectBLESelected(){
 
         if (mBluetoothLeService != null) {
@@ -378,8 +298,6 @@ public class DeviceScanActivity extends Activity {
             if (!mBluetoothLeService.initialize()) {
                 finish();
             }
-            // Automatically connects to the device upon successful start-up initialization.
-            //connection();
         }
         @Override
         public void onServiceDisconnected(ComponentName componentName) {
@@ -387,6 +305,9 @@ public class DeviceScanActivity extends Activity {
         }
     };
 
+    /**
+     * Connect to the selected BLE device. If the connection succeed start the Main Activity.
+     */
     private void connection(){
         bleConnected = mBluetoothLeService.connect(mDeviceAddress);
         if (bleConnected){
@@ -395,101 +316,4 @@ public class DeviceScanActivity extends Activity {
             Toast.makeText(getBaseContext(), "No ha sido posible conectar", Toast.LENGTH_LONG).show();
         }
     }
-
-    // Handles various events fired by the Service.
-// ACTION_GATT_CONNECTED: connected to a GATT server.
-// ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
-// ACTION_GATT_SERVICES_DISCOVERED: discovered GATT services.
-// ACTION_DATA_AVAILABLE: received data from the device. This can be a
-// result of read or notification operations.
-    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
-                mConnected = true;
-                Toast.makeText(getBaseContext(), "Conectado a BLE", Toast.LENGTH_LONG).show();
-                //updateConnectionState(R.string.connected);
-                //invalidateOptionsMenu();
-            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
-                mConnected = false;
-                //updateConnectionState(R.string.disconnected);
-                //invalidateOptionsMenu();
-                //clearUI();
-            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
-                Toast.makeText(getBaseContext(), "Servicio GATT descubierto", Toast.LENGTH_LONG).show();
-                // Show all the supported services and characteristics on the
-                // user interface.
-                displayGattServices(mBluetoothLeService.getSupportedGattServices());
-            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                //displayData(intent.getStringExtra(BluetoothLeService.EXTRA_DATA));
-                String data = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
-                Toast.makeText(getBaseContext(), data, Toast.LENGTH_LONG).show();
-            }
-        }
-    };
-
-    private void updateConnectionState(final int resourceId) {
-        runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                mConnectionState.setText(resourceId);
-            }
-        });
-    }
-
-    // Demonstrates how to iterate through the supported GATT Services/Characteristics.
-    // In this sample, we populate the data structure that is bound to the ExpandableListView
-    // on the UI.
-    private void displayGattServices(List<BluetoothGattService> gattServices) {
-        if (gattServices == null) return;
-        String uuid = null;
-        String unknownServiceString = getResources().getString(R.string.unknown_service);
-        String unknownCharaString = getResources().getString(R.string.unknown_characteristic);
-        ArrayList<HashMap<String, String>> gattServiceData = new ArrayList<HashMap<String, String>>();
-        ArrayList<ArrayList<HashMap<String, String>>> gattCharacteristicData
-                = new ArrayList<ArrayList<HashMap<String, String>>>();
-        mGattCharacteristics = new ArrayList<ArrayList<BluetoothGattCharacteristic>>();
-
-        // Loops through available GATT Services.
-        for (BluetoothGattService gattService : gattServices) {
-            HashMap<String, String> currentServiceData = new HashMap<String, String>();
-            uuid = gattService.getUuid().toString();
-            currentServiceData.put(
-                    LIST_NAME, SampleGattAttributes.lookup(uuid, unknownServiceString));
-            currentServiceData.put(LIST_UUID, uuid);
-            gattServiceData.add(currentServiceData);
-
-            ArrayList<HashMap<String, String>> gattCharacteristicGroupData =
-                    new ArrayList<HashMap<String, String>>();
-            List<BluetoothGattCharacteristic> gattCharacteristics =
-                    gattService.getCharacteristics();
-            ArrayList<BluetoothGattCharacteristic> charas =
-                    new ArrayList<BluetoothGattCharacteristic>();
-
-            // Loops through available Characteristics.
-            for (BluetoothGattCharacteristic gattCharacteristic : gattCharacteristics) {
-                charas.add(gattCharacteristic);
-                HashMap<String, String> currentCharaData = new HashMap<String, String>();
-                uuid = gattCharacteristic.getUuid().toString();
-                currentCharaData.put(
-                        LIST_NAME, SampleGattAttributes.lookup(uuid, unknownCharaString));
-                currentCharaData.put(LIST_UUID, uuid);
-                gattCharacteristicGroupData.add(currentCharaData);
-            }
-            mGattCharacteristics.add(charas);
-            gattCharacteristicData.add(gattCharacteristicGroupData);
-        }
-
-    }
-
-    private static IntentFilter makeGattUpdateIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
-        return intentFilter;
-    }
-
 }

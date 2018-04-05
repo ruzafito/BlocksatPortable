@@ -23,41 +23,76 @@ import sener.blocksatportable.R;
  * @since   2018-03-10
  */
 public class LeDeviceListAdapter extends BaseAdapter {
+
+    /**
+     * An ArrayList containing BluetoothDevices
+     */
     private ArrayList<BluetoothDevice> mLeDevices;
-    private LayoutInflater mInflator;
 
+    /**
+     * A LayoutInflater containing the views of the devices
+     */
+    private LayoutInflater mInflater;
+
+    /**
+     * Contains the Image Resource ID of the device list
+     */
     private int deviceListLayout;
-    private Context context;
 
+    /**
+     * Set the class fields with the values given
+     * @param context Context where the adapter will be used
+     * @param layout Device list layout where the adapter will be used
+     */
     public LeDeviceListAdapter(Context context, int layout) {
         super();
 
-        this.context = context;
         this.deviceListLayout = layout;
 
         mLeDevices = new ArrayList<BluetoothDevice>();
-        mInflator = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+        mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
 
+    /**
+     * Add a device to the Adapter Array List of Bluetooth devices.
+     * @param device The devices to be added
+     */
     public void addDevice(BluetoothDevice device) {
         if(!mLeDevices.contains(device)) {
             mLeDevices.add(device);
         }
     }
 
+    /**
+     * Get a device from the Adapter Array List of Bluetooth devices.
+     * @param position The position of gotten device
+     * @return The device in the position.
+     */
     public BluetoothDevice getDevice(int position) {
         return mLeDevices.get(position);
     }
 
+    /**
+     * Clear all the devices inside the Adapter Array List of Bluetooth devices
+     */
     public void clear() {
         mLeDevices.clear();
     }
 
+    /**
+     * Get the Adapter Array List of Bluetooth devices size
+     * @return The number of devices in the list
+     */
     @Override
     public int getCount() {
         return mLeDevices.size();
     }
 
+    /**
+     * Get an device object from the Adapter Array List of Bluetooth devices.
+     * @param i The position of gotten device
+     * @return The device object in the position.
+     */
     @Override
     public Object getItem(int i) {
         return mLeDevices.get(i);
@@ -73,7 +108,7 @@ public class LeDeviceListAdapter extends BaseAdapter {
         ViewHolder viewHolder;
         // General ListView optimization code.
         if (view == null) {
-            view = mInflator.inflate(deviceListLayout, viewGroup, false);
+            view = mInflater.inflate(deviceListLayout, viewGroup, false);
             viewHolder = new ViewHolder();
             viewHolder.deviceAddress = (TextView) view.findViewById(R.id.device_address);
             viewHolder.deviceName = (TextView) view.findViewById(R.id.device_name);
@@ -94,6 +129,9 @@ public class LeDeviceListAdapter extends BaseAdapter {
     }
 }
 
+/**
+ * Class to hold the view
+ */
 class ViewHolder {
     TextView deviceName;
     TextView deviceAddress;

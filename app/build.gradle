@@ -4,9 +4,9 @@ android {
     compileSdkVersion 27
     defaultConfig {
         applicationId "sener.blocksatportable"
-        minSdkVersion 18
+        minSdkVersion 19
         targetSdkVersion 22
-        versionCode 1
+        versionCode 22
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         javaCompileOptions {

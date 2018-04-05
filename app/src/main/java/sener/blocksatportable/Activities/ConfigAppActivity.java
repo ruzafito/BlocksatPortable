@@ -25,12 +25,15 @@ import sener.blocksatportable.R;
 
 public class ConfigAppActivity extends AppCompatActivity {
 
+    /**
+     * Drawer Layout for the lateral menu
+     */
     private DrawerLayout mDrawerLayout;
 
     /**
-     * 
-     * @param activity
-     * @return
+     * Intent builder
+     * @param activity Current activity
+     * @return Intent
      */
     public static final Intent buildIntent(Activity activity) {
         Intent intent = new Intent(activity, ConfigAppActivity.class);
@@ -40,14 +43,23 @@ public class ConfigAppActivity extends AppCompatActivity {
         return intent;
     }
 
+    /**
+     * This is the override of the onCreate method from the activity
+     * this method is executed when the activity is created and
+     * links the activity with the layout, initialize the variables
+     * of the class, starts the listeners of the buttons
+     * and load the gestures of the library
+     * @param savedInstanceState The previous state of the activity
+     */
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_config_app);
 
+        // Links the item of the layout with its field.
         mDrawerLayout = findViewById(R.id.drawer_layout);
 
-        // Open menu
+        // Listener of the button_menu open the lateral menu
         findViewById(R.id.button_menu).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -55,6 +67,7 @@ public class ConfigAppActivity extends AppCompatActivity {
             }
         });
 
+        // Links the navigation view of the layout to the local field navigationView
         NavigationView navigationView = findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(
                 new NavigationView.OnNavigationItemSelectedListener() {
@@ -65,6 +78,7 @@ public class ConfigAppActivity extends AppCompatActivity {
                         // close drawer when item is tapped
                         mDrawerLayout.closeDrawers();
 
+                        // start the activity selected in the menu
                         switch (menuItem.getItemId()) {
                             case R.id.nav_blocksat_portable:
                                 startActivity(MainActivity.buildIntent(ConfigAppActivity.this));
@@ -78,11 +92,9 @@ public class ConfigAppActivity extends AppCompatActivity {
                                 startActivity(InfoActivity.buildIntent(ConfigAppActivity.this));
                                 return true;
                         }
-
                         return true;
                     }
                 });
-
     }
 
 }

@@ -13,6 +13,32 @@
     <string name="version">1.0.0</string>
     <string name="contact">sergiodelhorno@gmail.com</string>
 
+    <string name="sign_up_label">[SIGN UP]</string>
+    <string name="send_email_title">Enviar email…</string>
+    <string name="user_request_text">Solicitud de usuario de acceso para el operario: [Introducir nombre, número identificativo y datos de contacto]</string>
+    <string name="no_mail_clients">No tienes clientes de email instalados</string>
+    <string name="incorrect_user">introduzca un usuario correcto</string>
+    <string name="incorrect_password">la contraseña debe contener más de 3 caracteres</string>
+
+    <string name="ble_disconnected">ATENCIÓN: Dispositivo BLE desconectado</string>
+
+    <string name="header_separator">_</string>
+    <string name="parameter_separator">:</string>
+    <string name="values_separator">;</string>
+    <string name="init_rx">init</string>
+    <string name="init_response">initOk</string>
+    <string name="message_header">BP</string>
+    <string name="device_bond_success">Dispositivo BLE enlazado con éxito!</string>
+    <string name="error_message_process">Null! Error al procesar el mensaje</string>
+    <string name="gps_state_header">gpssta</string>
+    <string name="gps_pos_header">gpspos</string>
+    <string name="battery_header">batter</string>
+    <string name="gprs_state_header">gprsst</string>
+    <string name="gprs_signal_header">gprssi</string>
+    <string name="no_battery_info">NA</string>
+    <string name="gps_state_on">on</string>
+    <string name="gps_state_off">off</string>
+    <string name="gps_state_search">search</string>
 
     <string name="ble_not_supported">BLE is not supported</string>
     <string name="label_data">Data:</string>
@@ -27,6 +53,11 @@
     <string name="unknown_device">Unknown device</string>
     <string name="unknown_characteristic">Unknown characteristic</string>
     <string name="unknown_service">Unknown service</string>
+
+    <string name="popup_title">Quit nRF UART</string>
+    <string name="popup_message">Do you want to quit this Application?</string>
+    <string name="popup_yes">YES</string>
+    <string name="popup_no">NO</string>
 
     <!-- Menu items -->
     <string name="menu_connect">Connect</string>
