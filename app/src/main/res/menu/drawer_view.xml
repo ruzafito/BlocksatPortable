@@ -5,6 +5,9 @@
             android:id="@+id/nav_blocksat_portable"
             android:title="@string/app_label" />
         <item
+            android:id="@+id/nav_map"
+            android:title="@string/menu_map" />
+        <item
             android:id="@+id/nav_config_devi"
             android:title="@string/menu_config_devi" />
         <item

@@ -7,6 +7,7 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
@@ -86,6 +87,11 @@ public class InfoActivity extends AppCompatActivity {
 
         // Links the navigation view of the layout to the local field navigationView
         NavigationView navigationView = findViewById(R.id.nav_view);
+
+        Menu menu = navigationView.getMenu();
+        MenuItem mapItem = menu.getItem(1);
+        mapItem.setVisible(false);
+
         navigationView.setNavigationItemSelectedListener(
                 new NavigationView.OnNavigationItemSelectedListener() {
                     @Override

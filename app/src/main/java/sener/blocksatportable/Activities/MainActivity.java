@@ -21,6 +21,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -29,6 +30,7 @@ import java.text.DateFormat;
 import java.util.Date;
 
 import sener.blocksatportable.Communications.BluetoothLeService;
+import sener.blocksatportable.Others.MapsActivity;
 import sener.blocksatportable.R;
 
 /**
@@ -54,14 +56,16 @@ public class MainActivity extends AppCompatActivity {
     // Bluetooth Adapter to manage the events and states of the BLE connection
     private BluetoothAdapter mBluetoothAdapter;
 
+    private int requestActualState = REQUEST_INITIAL_STATE;
+
     // Icons
     private ImageView i_signal;
     private ImageView i_gps;
     private ImageView i_ble;
     private ImageView i_battery;
 
-    /// TODO: Eliminar codigo. Solo pruebas
-    private boolean cambioIcono = false;
+    // Button
+    private Button b_request;
 
     /**
      * BluetoohLeService which manage the BLE Service of the app.
@@ -76,14 +80,29 @@ public class MainActivity extends AppCompatActivity {
     private static final int UART_PROFILE_DISCONNECTED = 21;
     private static final int STATE_OFF = 10;
 
-    private static final String GPS_STATE_HEADER = "gpssta";
-    private static final String GPS_POSITION_HEADER = "gpspos";
-    private static final String GPRS_STATE_HEADER = "gprsst";
-    private static final String GPRS_SIGNAL_HEADER = "gprssi";
-    private static final String BATTERY_HEADER = "batter";
+    private static final String GPS_STATE_HEADER = "gss";
+    private static final String GPS_POSITION_HEADER = "gsp";
+    private static final String GPRS_STATE_HEADER = "grs";
+    private static final String GPRS_SIGNAL_HEADER = "gri";
+    private static final String CTC_STATE_HEADER = "ctcsta";
+    private static final String CTC_TRAIN_HEADER = "ctctra";
+    private static final String BATTERY_HEADER = "blv";
+    private static final String INIT_HEADER = "ini";
+
+    private static final int REQUEST_INITIAL_STATE = 0;
+    private static final int REQUEST_WAITING_STATE = 1;
+    private static final int REQUEST_GRANTED_STATE = 2;
+    private static final int REQUEST_WORKING_STATE = 3;
+    private static final int REQUEST_DENIED_STATE = 4;
+    private static final int REQUEST_FINISH_STATE = 5;
 
     private int mState = UART_PROFILE_DISCONNECTED;
     private BluetoothDevice mDevice = null;
+
+    public double coord_lat = 41.490272;
+    public double coord_long = 2.107008;
+
+    String text = "";
 
 
     /**
@@ -111,11 +130,13 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         // Link the items of the layout to its fields.
-        i_signal = (ImageView) findViewById(R.id.gsm_signal);
-        i_gps = (ImageView) findViewById(R.id.gps_signal);
-        i_ble = (ImageView) findViewById(R.id.ble_signal);
-        i_battery = (ImageView) findViewById(R.id.battery_level);
+        i_signal = findViewById(R.id.gsm_signal);
+        i_gps = findViewById(R.id.gps_signal);
+        i_ble = findViewById(R.id.ble_signal);
+        i_battery = findViewById(R.id.battery_level);
         mDrawerLayout = findViewById(R.id.drawer_layout);
+
+        b_request = findViewById(R.id.solicitar_inicio);
 
         // Set default images for the icons.
         i_signal.setImageResource(R.drawable.ic_signal_cellular_off);
@@ -132,23 +153,59 @@ public class MainActivity extends AppCompatActivity {
         mBluetoothAdapter = bluetoothManager.getAdapter();
 
 
-        /// TODO: Eliminar codigo. Solo pruebas
-        findViewById(R.id.solicitar_inicio).setOnClickListener(new View.OnClickListener() {
+        b_request.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                String message = "Prueba desde App";
-                if(cambioIcono){
-                    i_signal.setImageResource(R.drawable.ic_signal_cellular_0);
-                    cambioIcono = false;
-                    message = "Boton 1";
-                } else{
-                    i_signal.setImageResource(R.drawable.ic_signal_cellular_4);
-                    cambioIcono = true;
-                    message = "Y boton 2";
+                String message = getStringValue(R.string.param_request_label) + getStringValue(R.string.parameter_separator);
+
+                switch (requestActualState){
+                    case REQUEST_INITIAL_STATE:
+                        b_request.setText(R.string.solicitando);
+                        b_request.setBackgroundColor(getResources().getColor(R.color.colorRemoteControl));
+                        message = message + "str";
+                        requestActualState = REQUEST_WAITING_STATE;
+                        break;
+                    case REQUEST_WAITING_STATE:
+                        b_request.setText(R.string.concedido);
+                        b_request.setBackgroundColor(getResources().getColor(R.color.colorCommsLogs));
+                        message = message + "null";
+                        requestActualState++;
+                        break;
+                    case REQUEST_GRANTED_STATE:
+                        b_request.setText(R.string.trabajando);
+                        b_request.setBackgroundColor(getResources().getColor(R.color.colorCommsLogs));
+                        //requestActualState = REQUEST_WORKING_STATE;
+                        message = message + "null";
+                        requestActualState++;
+
+//                        Intent mapIntent = new Intent(MainActivity.this, MapsActivity.class);
+//                        mapIntent.putExtra("coord_lat", coord_lat);
+//                        mapIntent.putExtra("coord_long", coord_long);
+//                        startActivity(mapIntent);
+
+                        break;
+                    case REQUEST_WORKING_STATE:
+                        b_request.setText(R.string.rechazado);
+                        b_request.setBackgroundColor(getResources().getColor(R.color.colorAlert));
+                        message = message + "null";
+                        requestActualState++;
+                        break;
+                    case REQUEST_DENIED_STATE:
+                        b_request.setText(R.string.finalizado);
+                        b_request.setBackgroundColor(getResources().getColor(R.color.colorGrey));
+                        message = message + "null";
+                        //requestActualState = REQUEST_INITIAL_STATE;
+                        requestActualState++;
+                        break;
+                    case REQUEST_FINISH_STATE:
+                        b_request.setText(R.string.solicitar);
+                        b_request.setBackgroundColor(getResources().getColor(R.color.colorGrey));
+                        message = message + "null";
+                        requestActualState = REQUEST_INITIAL_STATE;
+                        break;
                 }
 
                 sendData(message);
-
             }
         });
 
@@ -190,6 +247,12 @@ public class MainActivity extends AppCompatActivity {
                         switch (menuItem.getItemId()) {
                             case R.id.nav_blocksat_portable:
                                 return true;
+                            case R.id.nav_map:
+                                Intent mapIntent = new Intent(MainActivity.this, MapsActivity.class);
+                                mapIntent.putExtra("coord_lat", coord_lat);
+                                mapIntent.putExtra("coord_long", coord_long);
+                                startActivity(mapIntent);
+                                return true;
                             case R.id.nav_config_devi:
                                 startActivity(ConfigDevActivity.buildIntent(MainActivity.this));
                                 return true;
@@ -211,6 +274,7 @@ public class MainActivity extends AppCompatActivity {
      */
     private void sendData(String message){
         byte[] value;
+        message = getStringValue(R.string.message_tx_header) + getStringValue(R.string.header_separator) + message + getStringValue(R.string.end_separator);
         try {
             //send data to service
             value = message.getBytes("UTF-8");
@@ -238,12 +302,14 @@ public class MainActivity extends AppCompatActivity {
 //        filterData.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
 //        registerReceiver(mBroadcastDataReceiver, filterData);
 
+        int s = mBluetoothAdapter.getState();
         // Check the state of the adapter to set the BLE icon initial state.
         /// TODO: consider revising.
         if (mBluetoothAdapter.getState() == BluetoothAdapter.STATE_ON ||
                 mBluetoothAdapter.getState() == BluetoothAdapter.STATE_TURNING_OFF ||
                 mBluetoothAdapter.getState() == BluetoothAdapter.STATE_TURNING_ON){
             i_ble.setImageResource(R.drawable.ic_bluetooth_searching);
+
         }
         else if(mBluetoothAdapter.getState() == BluetoothAdapter.STATE_OFF)
         {
@@ -387,18 +453,29 @@ public class MainActivity extends AppCompatActivity {
 
                 final byte[] txValue = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
 
-                String text = null;
+                String textToAdd = null;
                 try {
-                    text = new String(txValue, "UTF-8");
+                    textToAdd = new String(txValue, "UTF-8");
                 } catch (UnsupportedEncodingException e) {
                     e.printStackTrace();
                 }
 
-                //String text = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
-                String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
-                showMessage(currentDateTimeString + " -> " + text);
+                text = text + textToAdd;
 
-                processInputMessage(text);
+                if (text.contains(getStringValue(R.string.end_separator)))
+                {
+                    text = text.replace(getStringValue(R.string.end_separator),"");
+                    String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
+                    showMessage(currentDateTimeString + " -> " + text);
+
+                    try {
+                        processInputMessage(text);
+                    } catch (Exception ignore) {
+                        Log.e(TAG, ignore.toString() + ": " + text);
+                    }
+                    text = "";
+                }
+
             }
             //*********************//
             if (action.equals(BluetoothLeService.DEVICE_DOES_NOT_SUPPORT_UART)){
@@ -414,6 +491,7 @@ public class MainActivity extends AppCompatActivity {
      * @param received The received message from BLE device.
      */
     private void processInputMessage(String received){
+        i_ble.setImageResource(R.drawable.ic_bluetooth);
         if(received == null){
             showMessage(getStringValue(R.string.error_message_process));
             return;
@@ -421,64 +499,49 @@ public class MainActivity extends AppCompatActivity {
 
         // Split the header of the message.
         String[] labelParsed = received.split(getStringValue(R.string.header_separator));
+        // Parse the parameter and values
+        String[] parameterParsed = labelParsed[1].split(getStringValue(R.string.parameter_separator));
+        String subsystem = parameterParsed[0];
+        String[] values = parameterParsed[1].split(getStringValue(R.string.values_separator));
 
-        // Check the message is an init message or a values message.
-        if(received.equals(getStringValue(R.string.init_rx))){
-            // If is an init message set the BLE icon to connect and reply with an initOk
-            i_ble.setImageResource(R.drawable.ic_bluetooth);
-            sendData(getStringValue(R.string.init_response));
-            showMessage(getStringValue(R.string.device_bond_success));
-        } else if (labelParsed[0].equals(getStringValue(R.string.message_header)) && labelParsed.length > 1){
+        if (labelParsed[0].equals(getStringValue(R.string.message_rx_header)) && labelParsed.length > 1){
             // If is a value message, parse the parameter and values
-            String[] parameterParsed = labelParsed[1].split(getStringValue(R.string.parameter_separator));
-            String subsystem = parameterParsed[0];
-            String[] values = parameterParsed[1].split(getStringValue(R.string.values_separator));
+//            String[] parameterParsed = labelParsed[1].split(getStringValue(R.string.parameter_separator));
+//            String subsystem = parameterParsed[0];
+//            String[] values = parameterParsed[1].split(getStringValue(R.string.values_separator));
 
             // Switch between the subsystems and launch actions if needed
             switch (subsystem){
-                case GPS_STATE_HEADER:
-                    String gpsStateText = values[0];
-                    if (gpsStateText.equals(getStringValue(R.string.gps_state_on))){
-                        i_gps.setImageResource(R.drawable.ic_gps_fixed);
-                    }
-                    else
-                    {
-                        i_gps.setImageResource(R.drawable.ic_gps_not_fixed);
+                case INIT_HEADER:
+                    if (values[0].equals("ok")){
+                        initDeviceConnection();
                     }
                     break;
+                case GPS_STATE_HEADER:
+                    String gpsStateText = values[0];
+                    checkGPSDeviceState(gpsStateText);
+                    break;
                 case GPS_POSITION_HEADER:
+                    /// TODO: Something
+                    String gpsCoordText = values[0];
+                    getGPSCoord(gpsCoordText);
                     break;
                 case BATTERY_HEADER:
                     String batteryText = values[0];
-                    if (batteryText.equals(getStringValue(R.string.no_battery_info))){
-                        i_battery.setImageResource(R.drawable.ic_battery_unknown);
-                    } else {
-                        int batteryLevel = 0;
-                        try {
-                            batteryLevel = Integer.parseInt(batteryText);
-                        } catch(NumberFormatException nfe) {
-                            /// TODO: Handle parse error.
-                        }
-                        if(batteryLevel >= 90){
-                            i_battery.setImageResource(R.drawable.ic_battery_full);
-                        } else if (batteryLevel >= 60){
-                            i_battery.setImageResource(R.drawable.ic_battery_60);
-                        } else if (batteryLevel < 60 & batteryLevel >= 30){
-                            i_battery.setImageResource(R.drawable.ic_battery_30);
-                        } else if (batteryLevel < 30){
-                            i_battery.setImageResource(R.drawable.ic_battery_alert);
-                        }
-                    }
+                    checkBatteryDevice(batteryText);
                     break;
                 case GPRS_STATE_HEADER:
+                    /// TODO: Something
                     break;
                 case GPRS_SIGNAL_HEADER:
                     String gprsSignal = values[0];
-                    if(!gprsSignal.equals("0"))
-                    {
-                        /// TODO
-                        i_signal.setImageResource(R.drawable.ic_signal_cellular_no_connected);
-                    }
+                    checkGPRSDeviceSignal(gprsSignal);
+                    break;
+                case CTC_STATE_HEADER:
+                    /// TODO: Something
+                    break;
+                case CTC_TRAIN_HEADER:
+                    /// TODO: Something
                     break;
             }
         }
@@ -487,6 +550,101 @@ public class MainActivity extends AppCompatActivity {
             // Incorrect message format
             /// TODO: Something
             Log.e(TAG, "Incorrect message format received: " + received);
+        }
+    }
+
+    /**
+     * Set the double type global variables with the coordinates from device
+     * @param gpsCoordText A string with the coordinates of the device
+     */
+    private void getGPSCoord (String gpsCoordText){
+        String[] gpsCoord = gpsCoordText.split(",");
+        coord_lat = Double.valueOf(gpsCoord[0]);
+        coord_long = Double.valueOf(gpsCoord[1]);
+    }
+
+    /**
+     * Set the BLE icon to connect and reply with an initOk
+     */
+    private void initDeviceConnection (){
+        i_ble.setImageResource(R.drawable.ic_bluetooth);
+        String replyMessage = getStringValue(R.string.param_init_label) + getStringValue(R.string.parameter_separator) + "ok";
+        sendData(replyMessage);
+        showMessage(getStringValue(R.string.device_bond_success));
+    }
+
+    /**
+     * Checks the GPRS state received from device and change its icon.
+     * @param gpsStateText The text received from device with GPRS state
+     */
+    private void checkGPSDeviceState (String gpsStateText){
+        if (gpsStateText.equals(getStringValue(R.string.gps_state_on))){
+            i_gps.setImageResource(R.drawable.ic_gps_fixed);
+        }
+        else
+        {
+            i_gps.setImageResource(R.drawable.ic_gps_not_fixed);
+        }
+    }
+
+    /**
+     * Checks the battery level received from device and change its icon.
+     * @param batteryText The text received from device with battery level
+     */
+    private void checkBatteryDevice (String batteryText){
+        if (batteryText.equals(getStringValue(R.string.no_value_info))){
+            i_battery.setImageResource(R.drawable.ic_battery_unknown);
+        } else {
+            int batteryLevel = 0;
+            try {
+                batteryLevel = Integer.parseInt(batteryText);
+            } catch(NumberFormatException nfe) {
+                /// TODO: Handle parse error.
+            }
+            if(batteryLevel >= 90){
+                i_battery.setImageResource(R.drawable.ic_battery_full);
+            } else if (batteryLevel >= 60){
+                i_battery.setImageResource(R.drawable.ic_battery_60);
+            } else if (batteryLevel < 60 & batteryLevel >= 30){
+                i_battery.setImageResource(R.drawable.ic_battery_30);
+            } else if (batteryLevel < 30){
+                i_battery.setImageResource(R.drawable.ic_battery_alert);
+            }
+        }
+    }
+
+    /**
+     * Checks the GPRS signal level received from device and change its icon.
+     * @param gprsSignal The text received from device with GPRS signal level
+     */
+    private void checkGPRSDeviceSignal (String gprsSignal){
+//        if(!gprsSignal.equals("0"))
+//        {
+//            /// TODO
+//            i_signal.setImageResource(R.drawable.ic_signal_cellular_no_connected);
+//        }
+
+        // https://foro.vodafone.es/t5/Android/intensidad-se%C3%B1al-dbm-y-asu/td-p/748990
+        if (gprsSignal.equals(getStringValue(R.string.no_value_info))){
+            i_signal.setImageResource(R.drawable.ic_signal_cellular_no_connected);
+        } else {
+            int gprsLevel = 0;
+            try {
+                gprsLevel = Integer.parseInt(gprsSignal);
+            } catch(NumberFormatException nfe) {
+                /// TODO: Handle parse error.
+            }
+            if(gprsLevel >= -75){
+                i_signal.setImageResource(R.drawable.ic_signal_cellular_4);
+            } else if (gprsLevel >= -85 && gprsLevel < - 75){
+                i_signal.setImageResource(R.drawable.ic_signal_cellular_3);
+            }else if (gprsLevel >= -97 && gprsLevel < - 85){
+                i_signal.setImageResource(R.drawable.ic_signal_cellular_2);
+            } else if (gprsLevel >= -110 && gprsLevel < -97){
+                i_signal.setImageResource(R.drawable.ic_signal_cellular_0);
+            } else if (gprsLevel < -110){
+                i_signal.setImageResource(R.drawable.ic_signal_cellular_no_connected);
+            }
         }
     }
 
@@ -562,12 +720,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onPause() {
         Log.d(TAG, "onPause");
-        try {
-            unregisterReceiver(mBroadcastConnectionReceiver);
-            unregisterReceiver(mBroadcastStateReceiver);
-        } catch (Exception ignore) {
-            Log.e(TAG, ignore.toString());
-        }
         super.onPause();
     }
 
@@ -588,7 +740,7 @@ public class MainActivity extends AppCompatActivity {
 
             case REQUEST_SELECT_DEVICE:
                 //When the DeviceListActivity return, with the selected device address
-                if (resultCode == Activity.RESULT_OK && data != null) {
+                if ((resultCode == RESULT_OK) && (data != null)) {
                     String deviceAddress = data.getStringExtra(BluetoothDevice.EXTRA_DEVICE);
                     mDevice = BluetoothAdapter.getDefaultAdapter().getRemoteDevice(deviceAddress);
 
@@ -598,7 +750,7 @@ public class MainActivity extends AppCompatActivity {
                 break;
             case REQUEST_ENABLE_BT:
                 // When the request to enable Bluetooth returns
-                if (resultCode == Activity.RESULT_OK) {
+                if (resultCode == RESULT_OK) {
                     showMessage("Bluetooth has turned on ");
                 } else {
                     // User did not enable Bluetooth or an error occurred
@@ -636,5 +788,4 @@ public class MainActivity extends AppCompatActivity {
             mBluetoothLeService = null;
         }
     };
-
 }

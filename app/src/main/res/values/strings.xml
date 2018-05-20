@@ -1,7 +1,19 @@
 <resources>
     <string name="app_name">BlocksatPortable</string>
+    <string name="logo_portable">Logo Blocksat Portable</string>
+    <string name="logo_sener">Logo Sener</string>
     <string name="app_label">Blocksat Portable</string>
     <string name="solicitar">Solicitar Inicio</string>
+    <string name="solicitando">Solicitando permiso…</string>
+    <string name="seleccione">Seleccione dispositivo:</string>
+    <string name="operario">Operario</string>
+    <string name="contraseña">Contraseña</string>
+    <string name="login">Login</string>
+    <string name="solicitar_usuario">Solicitar usuario de acceso</string>
+    <string name="concedido">Concedido</string>
+    <string name="rechazado">Rechazado</string>
+    <string name="trabajando">Trabajando…</string>
+    <string name="finalizado">Finalizado</string>
     <string name="gsm_signal">gsm_signal</string>
     <string name="gps_signal">gps_signal</string>
     <string name="ble_signal">ble_signal</string>
@@ -9,8 +21,9 @@
     <string name="button_menu">button_menu</string>
     <string name="menu_info">Info</string>
     <string name="menu_config_app">Configuración App</string>
+    <string name="menu_map">Mapa de Operación</string>
     <string name="menu_config_devi">Configuración Dispositivo</string>
-    <string name="version">1.0.0</string>
+    <string name="version">0.1.0</string>
     <string name="contact">sergiodelhorno@gmail.com</string>
 
     <string name="sign_up_label">[SIGN UP]</string>
@@ -20,26 +33,47 @@
     <string name="incorrect_user">introduzca un usuario correcto</string>
     <string name="incorrect_password">la contraseña debe contener más de 3 caracteres</string>
 
+    <string name="operator">Operador</string>
+
     <string name="ble_disconnected">ATENCIÓN: Dispositivo BLE desconectado</string>
 
+    <!-- Separators -->
     <string name="header_separator">_</string>
     <string name="parameter_separator">:</string>
     <string name="values_separator">;</string>
-    <string name="init_rx">init</string>
-    <string name="init_response">initOk</string>
-    <string name="message_header">BP</string>
-    <string name="device_bond_success">Dispositivo BLE enlazado con éxito!</string>
-    <string name="error_message_process">Null! Error al procesar el mensaje</string>
-    <string name="gps_state_header">gpssta</string>
-    <string name="gps_pos_header">gpspos</string>
+    <string name="end_separator">/</string>
+
+    <!-- Message headers -->
+    <string name="message_rx_header">DA</string>
+    <string name="message_tx_header">AD</string>
+
+    <!-- TX Parameters labels -->
+    <string name="param_request_label">req</string>
+    <string name="param_init_label">ini</string>
+    <string name="param_config_label">cfg</string>
+
+    <!-- RX Parameters labels -->
+    <string name="param_gps_state_label">gss</string>
+    <string name="param_gps_pos_label">gsp</string>
+    <string name="param_bat_level_label">blv</string>
+    <string name="param_gprs_state_label">grs</string>
+    <string name="param_gprs_signal_label">gri</string>
+    <string name="param_ctc_state_label">ctcsta</string>
+    <string name="param_ctc_trains_label">ctctra</string>
+    <string name="gps_state_header">gss</string>
+    <string name="gps_pos_header">gsp</string>
     <string name="battery_header">batter</string>
-    <string name="gprs_state_header">gprsst</string>
-    <string name="gprs_signal_header">gprssi</string>
-    <string name="no_battery_info">NA</string>
+    <string name="gprs_state_header">grs</string>
+    <string name="gprs_signal_header">gri</string>
+
+    <string name="no_value_info">NA</string>
     <string name="gps_state_on">on</string>
+
     <string name="gps_state_off">off</string>
     <string name="gps_state_search">search</string>
 
+    <string name="device_bond_success">Dispositivo BLE enlazado con éxito!</string>
+    <string name="error_message_process">Null! Error al procesar el mensaje</string>
     <string name="ble_not_supported">BLE is not supported</string>
     <string name="label_data">Data:</string>
     <string name="label_device_address">Device address:</string>
@@ -64,5 +98,6 @@
     <string name="menu_disconnect">Disconnect</string>
     <string name="menu_scan">Scan</string>
     <string name="menu_stop">Stop</string>
+    <string name="title_activity_maps">Map</string>
 
 </resources>
