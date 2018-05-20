@@ -53,8 +53,7 @@
         </activity>
         <activity android:name=".Activities.MainActivity" />
         <activity android:name=".Activities.InfoActivity" />
-        <activity android:name=".Activities.ConfigAppActivity" />
-        <activity android:name=".Activities.ConfigDevActivity" />
+        <activity android:name=".Activities.ConfigActivity" />
         <activity android:name=".Communications.DeviceScanActivity" />
 
         <service
@@ -77,7 +76,7 @@
             android:value="@integer/google_play_services_version" />
 
         <activity
-            android:name=".Others.MapsActivity"
+            android:name=".Activities.MapsActivity"
             android:label="@string/title_activity_maps"></activity>
     </application>
 

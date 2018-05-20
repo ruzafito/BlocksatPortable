@@ -20,9 +20,8 @@
     <string name="battery_level">battery_level</string>
     <string name="button_menu">button_menu</string>
     <string name="menu_info">Info</string>
-    <string name="menu_config_app">Configuración App</string>
+    <string name="menu_config">Configuración</string>
     <string name="menu_map">Mapa de Operación</string>
-    <string name="menu_config_devi">Configuración Dispositivo</string>
     <string name="version">0.1.0</string>
     <string name="contact">sergiodelhorno@gmail.com</string>
 

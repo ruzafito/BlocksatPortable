@@ -8,11 +8,8 @@
             android:id="@+id/nav_map"
             android:title="@string/menu_map" />
         <item
-            android:id="@+id/nav_config_devi"
-            android:title="@string/menu_config_devi" />
-        <item
-            android:id="@+id/nav_config_app"
-            android:title="@string/menu_config_app" />
+            android:id="@+id/nav_config"
+            android:title="@string/menu_config" />
         <item
             android:id="@+id/nav_info"
             android:title="@string/menu_info" />

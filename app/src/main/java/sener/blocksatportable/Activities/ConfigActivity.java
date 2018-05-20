@@ -14,7 +14,7 @@ import android.view.View;
 import sener.blocksatportable.R;
 
 /**
- * <h1>Activity: ConfigAppActivity</h1>
+ * <h1>Activity: ConfigActivity</h1>
  * <p>
  * Activity that shows the information of the App
  * </p>
@@ -24,7 +24,7 @@ import sener.blocksatportable.R;
  * @since   2018-02-25
  */
 
-public class ConfigAppActivity extends AppCompatActivity {
+public class ConfigActivity extends AppCompatActivity {
 
     /**
      * Drawer Layout for the lateral menu
@@ -37,7 +37,7 @@ public class ConfigAppActivity extends AppCompatActivity {
      * @return Intent
      */
     public static final Intent buildIntent(Activity activity) {
-        Intent intent = new Intent(activity, ConfigAppActivity.class);
+        Intent intent = new Intent(activity, ConfigActivity.class);
         if (activity.getClass() != MainActivity.class) {
             activity.finish();
         }
@@ -55,7 +55,7 @@ public class ConfigAppActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_config_app);
+        setContentView(R.layout.activity_config);
 
         // Links the item of the layout with its field.
         mDrawerLayout = findViewById(R.id.drawer_layout);
@@ -88,15 +88,12 @@ public class ConfigAppActivity extends AppCompatActivity {
                         // start the activity selected in the menu
                         switch (menuItem.getItemId()) {
                             case R.id.nav_blocksat_portable:
-                                startActivity(MainActivity.buildIntent(ConfigAppActivity.this));
+                                startActivity(MainActivity.buildIntent(ConfigActivity.this));
                                 return true;
-                            case R.id.nav_config_devi:
-                                startActivity(ConfigDevActivity.buildIntent(ConfigAppActivity.this));
-                                return true;
-                            case R.id.nav_config_app:
+                            case R.id.nav_config:
                                 return true;
                             case R.id.nav_info:
-                                startActivity(InfoActivity.buildIntent(ConfigAppActivity.this));
+                                startActivity(InfoActivity.buildIntent(ConfigActivity.this));
                                 return true;
                         }
                         return true;

@@ -30,7 +30,6 @@ import java.text.DateFormat;
 import java.util.Date;
 
 import sener.blocksatportable.Communications.BluetoothLeService;
-import sener.blocksatportable.Others.MapsActivity;
 import sener.blocksatportable.R;
 
 /**
@@ -253,11 +252,8 @@ public class MainActivity extends AppCompatActivity {
                                 mapIntent.putExtra("coord_long", coord_long);
                                 startActivity(mapIntent);
                                 return true;
-                            case R.id.nav_config_devi:
-                                startActivity(ConfigDevActivity.buildIntent(MainActivity.this));
-                                return true;
-                            case R.id.nav_config_app:
-                                startActivity(ConfigAppActivity.buildIntent(MainActivity.this));
+                            case R.id.nav_config:
+                                startActivity(ConfigActivity.buildIntent(MainActivity.this));
                                 return true;
                             case R.id.nav_info:
                                 startActivity(InfoActivity.buildIntent(MainActivity.this));

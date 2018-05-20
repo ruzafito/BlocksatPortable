@@ -1,4 +1,4 @@
-package sener.blocksatportable.Others;
+package sener.blocksatportable.Activities;
 
 import android.app.Activity;
 import android.app.Dialog;

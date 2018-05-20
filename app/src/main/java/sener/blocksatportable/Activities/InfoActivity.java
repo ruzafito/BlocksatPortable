@@ -106,11 +106,8 @@ public class InfoActivity extends AppCompatActivity {
                             case R.id.nav_blocksat_portable:
                                 startActivity(MainActivity.buildIntent(InfoActivity.this));
                                 return true;
-                            case R.id.nav_config_devi:
-                                startActivity(ConfigDevActivity.buildIntent(InfoActivity.this));
-                                return true;
-                            case R.id.nav_config_app:
-                                startActivity(ConfigAppActivity.buildIntent(InfoActivity.this));
+                            case R.id.nav_config:
+                                startActivity(ConfigActivity.buildIntent(InfoActivity.this));
                                 return true;
                             case R.id.nav_info:
                                 return true;
