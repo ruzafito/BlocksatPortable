@@ -33,15 +33,6 @@ public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
     private static final int REQUEST_SIGNUP = 0;
 
-//    /**
-//     * Intent builder
-//     * @param activity Current activity
-//     * @return Intent
-//     */
-//    public static Intent buildIntent(Activity activity) {
-//        return new Intent(activity, LoginActivity.class);
-//    }
-
     @InjectView(R.id.input_user) EditText _userText;
     @InjectView(R.id.input_password) EditText _passwordText;
     @InjectView(R.id.btn_login) Button _loginButton;
@@ -89,8 +80,6 @@ public class LoginActivity extends AppCompatActivity {
                             getResources().getString(R.string.no_mail_clients), Toast.LENGTH_SHORT).show();
                 }
 
-//                Toast.makeText(LoginActivity.this,"TBD",
-//                        Toast.LENGTH_SHORT).show();
             }
         });
     }
@@ -118,7 +107,7 @@ public class LoginActivity extends AppCompatActivity {
         String user = _userText.getText().toString();
         String password = _passwordText.getText().toString();
 
-        // TODO: Implement your own authentication logic here.
+        // Implement an authentication logic here.
 
         if ((user.equals("block") && password.equals("sat")) || (user.equals("") && password.equals(""))){
             Intent intent = new Intent(LoginActivity.this, DeviceScanActivity.class);
@@ -146,10 +135,10 @@ public class LoginActivity extends AppCompatActivity {
 
 
     /**
-     *
-     * @param requestCode
-     * @param resultCode
-     * @param data
+     * This method overrides onActivityResult. It runs when a sign up button is pressed.
+     * @param requestCode The code that is requesting.
+     * @param resultCode The code that is resulting.
+     * @param data The data information.
      */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {

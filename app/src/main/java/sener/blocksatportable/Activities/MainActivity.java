@@ -19,6 +19,7 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
@@ -55,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
     // Bluetooth Adapter to manage the events and states of the BLE connection
     private BluetoothAdapter mBluetoothAdapter;
 
-    private int requestActualState = REQUEST_INITIAL_STATE;
+    private static int requestActualState = 0;
 
     // Icons
     private ImageView i_signal;
@@ -83,8 +84,8 @@ public class MainActivity extends AppCompatActivity {
     private static final String GPS_POSITION_HEADER = "gsp";
     private static final String GPRS_STATE_HEADER = "grs";
     private static final String GPRS_SIGNAL_HEADER = "gri";
-    private static final String CTC_STATE_HEADER = "ctcsta";
-    private static final String CTC_TRAIN_HEADER = "ctctra";
+    private static final String CTC_STATE_HEADER = "cts";
+    private static final String CTC_TRAIN_HEADER = "ctt";
     private static final String BATTERY_HEADER = "blv";
     private static final String INIT_HEADER = "ini";
 
@@ -97,9 +98,15 @@ public class MainActivity extends AppCompatActivity {
 
     private int mState = UART_PROFILE_DISCONNECTED;
     private BluetoothDevice mDevice = null;
+    private static boolean isConfig = false;
 
     public double coord_lat = 41.490272;
     public double coord_long = 2.107008;
+
+    private int numOfTrains = 0;
+    private String[] trains_id = new String[20];
+    private double[] trains_lat = new double[20];
+    private double[] trains_long = new double[20];
 
     String text = "";
 
@@ -109,8 +116,22 @@ public class MainActivity extends AppCompatActivity {
      * @param activity Current activity
      * @return Intent
      */
-    public static final Intent buildIntent(Activity activity) {
+    public final static Intent buildIntent(Activity activity) {
         Intent intent = new Intent(activity, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        return intent;
+    }
+
+    public final static Intent buildIntentFromConfig(Activity activity, String ip, String port, String trainDistance, String sendFreq, String workTime) {
+        Intent intent = new Intent(activity, MainActivity.class);
+        intent.putExtra("ip", ip);
+        intent.putExtra("port", port);
+        intent.putExtra("trainDistance", trainDistance);
+        intent.putExtra("sendFreq", sendFreq);
+        intent.putExtra("workTime", workTime);
+
+        isConfig = true;
+
         intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         return intent;
     }
@@ -149,8 +170,9 @@ public class MainActivity extends AppCompatActivity {
         // BluetoothAdapter through BluetoothManager.
         final BluetoothManager bluetoothManager =
                 (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
-        mBluetoothAdapter = bluetoothManager.getAdapter();
-
+        if (bluetoothManager != null) {
+            mBluetoothAdapter = bluetoothManager.getAdapter();
+        }
 
         b_request.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -159,58 +181,31 @@ public class MainActivity extends AppCompatActivity {
 
                 switch (requestActualState){
                     case REQUEST_INITIAL_STATE:
-                        b_request.setText(R.string.solicitando);
-                        b_request.setBackgroundColor(getResources().getColor(R.color.colorRemoteControl));
-                        message = message + "str";
-                        requestActualState = REQUEST_WAITING_STATE;
+                        message = message + getStringValue(R.string.start_request_label);
+                        sendData(message);
                         break;
                     case REQUEST_WAITING_STATE:
-                        b_request.setText(R.string.concedido);
-                        b_request.setBackgroundColor(getResources().getColor(R.color.colorCommsLogs));
-                        message = message + "null";
-                        requestActualState++;
                         break;
                     case REQUEST_GRANTED_STATE:
-                        b_request.setText(R.string.trabajando);
-                        b_request.setBackgroundColor(getResources().getColor(R.color.colorCommsLogs));
-                        //requestActualState = REQUEST_WORKING_STATE;
-                        message = message + "null";
-                        requestActualState++;
-
-//                        Intent mapIntent = new Intent(MainActivity.this, MapsActivity.class);
-//                        mapIntent.putExtra("coord_lat", coord_lat);
-//                        mapIntent.putExtra("coord_long", coord_long);
-//                        startActivity(mapIntent);
-
                         break;
                     case REQUEST_WORKING_STATE:
-                        b_request.setText(R.string.rechazado);
-                        b_request.setBackgroundColor(getResources().getColor(R.color.colorAlert));
-                        message = message + "null";
-                        requestActualState++;
+                        message = message + getStringValue(R.string.stop_request_label);
+                        sendData(message);
                         break;
                     case REQUEST_DENIED_STATE:
-                        b_request.setText(R.string.finalizado);
+                        b_request.setText(R.string.solicitar);
                         b_request.setBackgroundColor(getResources().getColor(R.color.colorGrey));
-                        message = message + "null";
-                        //requestActualState = REQUEST_INITIAL_STATE;
-                        requestActualState++;
+                        requestActualState = REQUEST_INITIAL_STATE;
                         break;
                     case REQUEST_FINISH_STATE:
                         b_request.setText(R.string.solicitar);
                         b_request.setBackgroundColor(getResources().getColor(R.color.colorGrey));
-                        message = message + "null";
                         requestActualState = REQUEST_INITIAL_STATE;
                         break;
                 }
-
-                sendData(message);
             }
         });
 
-
-//        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
-//        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
 
 
         // Listener of the button_menu to open the lateral menu
@@ -250,8 +245,12 @@ public class MainActivity extends AppCompatActivity {
                                 Intent mapIntent = new Intent(MainActivity.this, MapsActivity.class);
                                 mapIntent.putExtra("coord_lat", coord_lat);
                                 mapIntent.putExtra("coord_long", coord_long);
+                                mapIntent.putExtra("numOfTrains", numOfTrains);
+                                mapIntent.putExtra("trains_id", trains_id);
+                                mapIntent.putExtra("trains_lat", trains_lat);
+                                mapIntent.putExtra("trains_long", trains_long);
                                 startActivity(mapIntent);
-                                return true;
+                                return false;
                             case R.id.nav_config:
                                 startActivity(ConfigActivity.buildIntent(MainActivity.this));
                                 return true;
@@ -259,10 +258,34 @@ public class MainActivity extends AppCompatActivity {
                                 startActivity(InfoActivity.buildIntent(MainActivity.this));
                                 return true;
                         }
-                        return true;
+                        return false;
                     }
                 });
     }
+
+    private void sendConfiguration(){
+        if(isConfig){
+            Intent intent = getIntent();
+            String message = "";
+            String ipCTC = intent.getStringExtra("ip");
+            String portCTC = intent.getStringExtra("port");
+            String trainDistance = intent.getStringExtra("trainDistance");
+            String sendFreq = intent.getStringExtra("sendFreq");
+            String workTime = intent.getStringExtra("workTime");
+
+            message = getStringValue(R.string.param_config_label) + getStringValue(R.string.parameter_separator);
+            message = message + ipCTC + getStringValue(R.string.values_separator);
+            message = message + portCTC + getStringValue(R.string.values_separator);
+            message = message + trainDistance + getStringValue(R.string.values_separator);
+            message = message + sendFreq + getStringValue(R.string.values_separator);
+            message = message + workTime;
+
+            sendData(message);
+            isConfig = false;
+        }
+    }
+
+
 
     /**
      * Call a function in BluetoothLeService to send a message
@@ -271,17 +294,38 @@ public class MainActivity extends AppCompatActivity {
     private void sendData(String message){
         byte[] value;
         message = getStringValue(R.string.message_tx_header) + getStringValue(R.string.header_separator) + message + getStringValue(R.string.end_separator);
-        try {
-            //send data to service
-            value = message.getBytes("UTF-8");
-            mBluetoothLeService.writeRXCharacteristic(value);
-            //Update the log with time stamp
-            String currentDateTimeString = DateFormat.getTimeInstance().format(new Date());
-            /// TODO: Use the log
-        } catch (UnsupportedEncodingException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        if (message.length() > 20){
+            String message1 = message.substring(0,19);
+            try {
+                //send data to service
+                value = message1.getBytes("UTF-8");
+                mBluetoothLeService.writeRXCharacteristic(value);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+            String message2 = message.substring(19);
+            try {
+                Thread.sleep(250);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            try {
+                //send data to service
+                value = message2.getBytes("UTF-8");
+                mBluetoothLeService.writeRXCharacteristic(value);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
+        } else{
+            try {
+                //send data to service
+                value = message.getBytes("UTF-8");
+                mBluetoothLeService.writeRXCharacteristic(value);
+            } catch (UnsupportedEncodingException e) {
+                e.printStackTrace();
+            }
         }
+
     }
 
     /**
@@ -293,14 +337,21 @@ public class MainActivity extends AppCompatActivity {
     public void onResume(){
         super.onResume();
 
-//        IntentFilter filterData = new IntentFilter();
-//        filterData.addAction(BluetoothDevice.ACTION_ACL_CONNECTED);
-//        filterData.addAction(BluetoothDevice.ACTION_ACL_DISCONNECTED);
-//        registerReceiver(mBroadcastDataReceiver, filterData);
+        NavigationView navigationView = findViewById(R.id.nav_view);
+        Menu menu = navigationView.getMenu();
+        MenuItem mapItem = menu.getItem(1);
+        mapItem.setVisible(true);
+        mapItem.setChecked(false);
+        MenuItem selectedItem = menu.getItem(0);
+        selectedItem.setChecked(true);
+        MenuItem configTiem = menu.getItem(2);
+        configTiem.setChecked(false);
+        MenuItem infoTiem = menu.getItem(3);
+        infoTiem.setChecked(false);
+
 
         int s = mBluetoothAdapter.getState();
         // Check the state of the adapter to set the BLE icon initial state.
-        /// TODO: consider revising.
         if (mBluetoothAdapter.getState() == BluetoothAdapter.STATE_ON ||
                 mBluetoothAdapter.getState() == BluetoothAdapter.STATE_TURNING_OFF ||
                 mBluetoothAdapter.getState() == BluetoothAdapter.STATE_TURNING_ON){
@@ -310,6 +361,33 @@ public class MainActivity extends AppCompatActivity {
         else if(mBluetoothAdapter.getState() == BluetoothAdapter.STATE_OFF)
         {
             i_ble.setImageResource(R.drawable.ic_bluetooth_disabled);
+        }
+
+        switch (requestActualState){
+            case REQUEST_INITIAL_STATE:
+                b_request.setText(R.string.solicitar);
+                b_request.setBackgroundColor(getResources().getColor(R.color.colorGrey));
+                break;
+            case REQUEST_WAITING_STATE:
+                b_request.setText(R.string.solicitando);
+                b_request.setBackgroundColor(getResources().getColor(R.color.colorRemoteControl));
+                break;
+            case REQUEST_GRANTED_STATE:
+                b_request.setText(R.string.concedido);
+                b_request.setBackgroundColor(getResources().getColor(R.color.colorCommsLogs));
+                break;
+            case REQUEST_WORKING_STATE:
+                b_request.setText(R.string.trabajando);
+                b_request.setBackgroundColor(getResources().getColor(R.color.colorCommsLogs));
+                break;
+            case REQUEST_DENIED_STATE:
+                b_request.setText(R.string.rechazado);
+                b_request.setBackgroundColor(getResources().getColor(R.color.colorAlert));
+                break;
+            case REQUEST_FINISH_STATE:
+                b_request.setText(R.string.finalizado);
+                b_request.setBackgroundColor(getResources().getColor(R.color.colorGrey));
+                break;
         }
 
         Log.d(TAG, "onResume");
@@ -367,23 +445,6 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
-//    private final BroadcastReceiver mBroadcastDataReceiver = new BroadcastReceiver() {
-//
-//        @Override
-//        public void onReceive(Context context, Intent intent) {
-//            String action = intent.getAction();
-//            BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-//
-//            switch (action){
-//                case BluetoothDevice.ACTION_ACL_CONNECTED:
-//                    i_ble.setImageResource(R.drawable.ic_bluetooth_searching);
-//                    break;
-//                case BluetoothDevice.ACTION_ACL_DISCONNECTED:
-//                    bleOut("ATENCIÓN: Dispositivo BLE desconectado");
-//                    break;
-//            }
-//        }
-//    };
 
     /**
      * Sets the BLE icon to disabled and notify to the user.
@@ -393,16 +454,6 @@ public class MainActivity extends AppCompatActivity {
         i_ble.setBackgroundColor(getResources().getColor(R.color.colorAlert));
         showMessage(getStringValue(R.string.ble_disconnected));
     }
-
-
-//    private Handler mHandler = new Handler() {
-//        @Override
-//
-//        //Handler events that received from UART service
-//        public void handleMessage(Message msg) {
-//
-//        }
-//    };
 
     /**
      * Implements the Broadcast Receiver of the UART GATT Service.
@@ -501,10 +552,6 @@ public class MainActivity extends AppCompatActivity {
         String[] values = parameterParsed[1].split(getStringValue(R.string.values_separator));
 
         if (labelParsed[0].equals(getStringValue(R.string.message_rx_header)) && labelParsed.length > 1){
-            // If is a value message, parse the parameter and values
-//            String[] parameterParsed = labelParsed[1].split(getStringValue(R.string.parameter_separator));
-//            String subsystem = parameterParsed[0];
-//            String[] values = parameterParsed[1].split(getStringValue(R.string.values_separator));
 
             // Switch between the subsystems and launch actions if needed
             switch (subsystem){
@@ -534,19 +581,35 @@ public class MainActivity extends AppCompatActivity {
                     checkGPRSDeviceSignal(gprsSignal);
                     break;
                 case CTC_STATE_HEADER:
-                    /// TODO: Something
+                    String ctcState = values[0];
+                    updateCTCState(ctcState);
                     break;
                 case CTC_TRAIN_HEADER:
-                    /// TODO: Something
+                    String trainId = values[0];
+                    String trainLat = values[1];
+                    String trainLong = values[2];
+                    String trainDistance = values[3];
+                    addTrainToMap(trainId, trainLat, trainLong, trainDistance);
                     break;
             }
         }
         else if(!received.equals("ack"))
         {
             // Incorrect message format
-            /// TODO: Something
             Log.e(TAG, "Incorrect message format received: " + received);
         }
+    }
+
+    private void addTrainToMap(String trainId, String tLat, String tLong, String tDistance){
+        double trainLat = Double.valueOf(tLat);
+        double trainLong = Double.valueOf(tLong);
+        long trainDistance = Long.valueOf(tDistance);
+
+        trains_id[numOfTrains] = trainId;
+        trains_lat[numOfTrains] = trainLat;
+        trains_long[numOfTrains] = trainLong;
+
+        numOfTrains++;
     }
 
     /**
@@ -567,6 +630,9 @@ public class MainActivity extends AppCompatActivity {
         String replyMessage = getStringValue(R.string.param_init_label) + getStringValue(R.string.parameter_separator) + "ok";
         sendData(replyMessage);
         showMessage(getStringValue(R.string.device_bond_success));
+        b_request.setText(R.string.solicitar);
+        b_request.setBackgroundColor(getResources().getColor(R.color.colorGrey));
+        requestActualState = REQUEST_INITIAL_STATE;
     }
 
     /**
@@ -595,7 +661,6 @@ public class MainActivity extends AppCompatActivity {
             try {
                 batteryLevel = Integer.parseInt(batteryText);
             } catch(NumberFormatException nfe) {
-                /// TODO: Handle parse error.
             }
             if(batteryLevel >= 90){
                 i_battery.setImageResource(R.drawable.ic_battery_full);
@@ -614,11 +679,6 @@ public class MainActivity extends AppCompatActivity {
      * @param gprsSignal The text received from device with GPRS signal level
      */
     private void checkGPRSDeviceSignal (String gprsSignal){
-//        if(!gprsSignal.equals("0"))
-//        {
-//            /// TODO
-//            i_signal.setImageResource(R.drawable.ic_signal_cellular_no_connected);
-//        }
 
         // https://foro.vodafone.es/t5/Android/intensidad-se%C3%B1al-dbm-y-asu/td-p/748990
         if (gprsSignal.equals(getStringValue(R.string.no_value_info))){
@@ -641,6 +701,31 @@ public class MainActivity extends AppCompatActivity {
             } else if (gprsLevel < -110){
                 i_signal.setImageResource(R.drawable.ic_signal_cellular_no_connected);
             }
+        }
+    }
+
+    private void updateCTCState(String ctcState)
+    {
+        if(ctcState.equals(getStringValue(R.string.ctc_wait_state_label))){
+            b_request.setText(R.string.solicitando);
+            b_request.setBackgroundColor(getResources().getColor(R.color.colorRemoteControl));
+            requestActualState = REQUEST_WAITING_STATE;
+        }else if(ctcState.equals(getStringValue(R.string.ctc_granted_state_label))){
+            b_request.setText(R.string.concedido);
+            b_request.setBackgroundColor(getResources().getColor(R.color.colorCommsLogs));
+            requestActualState = REQUEST_GRANTED_STATE;
+        }else if(ctcState.equals(getStringValue(R.string.ctc_denied_state_label))){
+            b_request.setText(R.string.rechazado);
+            b_request.setBackgroundColor(getResources().getColor(R.color.colorAlert));
+            requestActualState = REQUEST_DENIED_STATE;
+        }else if(ctcState.equals(getStringValue(R.string.ctc_end_state_label))){
+            b_request.setText(R.string.finalizado);
+            b_request.setBackgroundColor(getResources().getColor(R.color.colorGrey));
+            requestActualState = REQUEST_FINISH_STATE;
+        }else if(ctcState.equals(getStringValue(R.string.ctc_work_state_label))){
+            b_request.setText(R.string.trabajando);
+            b_request.setBackgroundColor(getResources().getColor(R.color.colorCommsLogs));
+            requestActualState = REQUEST_WORKING_STATE;
         }
     }
 
@@ -778,6 +863,7 @@ public class MainActivity extends AppCompatActivity {
             if (!mBluetoothLeService.initialize()) {
                 finish();
             }
+            sendConfiguration();
         }
         @Override
         public void onServiceDisconnected(ComponentName componentName) {

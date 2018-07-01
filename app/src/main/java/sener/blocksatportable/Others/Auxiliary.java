@@ -50,7 +50,6 @@ public class Auxiliary {
             //convert string to byte[] data in order to send it.
             value = sendData.getBytes("UTF-8");
         } catch (UnsupportedEncodingException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
         return  value;
